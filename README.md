@@ -11,6 +11,9 @@
 
 ## 在线使用
 
+https://chinese-t-s-docconverter.streamlit.app/
+
+上传的文件只是临时保存在内存中，刷新后即会删除，不会被保存到Streamlit Cloud的服务器上。
 
 ## 本地安装说明
 
