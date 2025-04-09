@@ -582,31 +582,40 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Dictionary file management
-dict_file_path = st.text_input("词典文件路径", value=st.session_state.dict_file_path)
-st.session_state.dict_file_path = dict_file_path
+st.markdown("### 词典文件管理")
+st.markdown("你可以上传已有的词典文件，或下载当前词典以备将来使用。")
 
-# 加载和保存按钮并排
-load_col, save_col = st.columns(2)
-with load_col:
-    if st.button("加载词典", use_container_width=True):
-        if os.path.exists(dict_file_path):
-            try:
-                with open(dict_file_path, 'r', encoding='utf-8') as f:
-                    st.session_state.custom_dict = json.load(f)
-                st.success(f"成功加载词典: {len(st.session_state.custom_dict)} 个条目")
-            except Exception as e:
-                st.error(f"加载词典失败: {e}")
-        else:
-            st.warning(f"词典文件不存在: {dict_file_path}")
+# 上传和下载按钮并排
+upload_col, download_col = st.columns(2)
 
-with save_col:
-    if st.button("保存词典", use_container_width=True):
+# 上传词典文件
+with upload_col:
+    uploaded_file = st.file_uploader("上传词典文件", type=["json"], help="上传JSON格式的词典文件")
+    if uploaded_file is not None:
         try:
-            with open(dict_file_path, 'w', encoding='utf-8') as f:
-                json.dump(st.session_state.custom_dict, f, ensure_ascii=False, indent=2)
-            st.success(f"成功保存词典: {len(st.session_state.custom_dict)} 个条目")
+            # 读取上传的文件内容
+            dict_content = uploaded_file.read().decode('utf-8')
+            uploaded_dict = json.loads(dict_content)
+            st.session_state.custom_dict = uploaded_dict
+            st.success(f"成功加载词典: {len(st.session_state.custom_dict)} 个条目")
         except Exception as e:
-            st.error(f"保存词典失败: {e}")
+            st.error(f"加载词典失败: {e}")
+
+# 下载当前词典
+with download_col:
+    if st.button("下载当前词典", use_container_width=True):
+        # 将当前词典转换为JSON字符串
+        json_str = json.dumps(st.session_state.custom_dict, ensure_ascii=False, indent=2)
+        # 创建下载链接
+        b64 = base64.b64encode(json_str.encode('utf-8')).decode()
+        href = f'<a href="data:application/json;base64,{b64}" download="custom_dict.json" class="custom-btn">点击下载词典文件</a>'
+        st.markdown(href, unsafe_allow_html=True)
+        
+        # 显示成功消息
+        if len(st.session_state.custom_dict) > 0:
+            st.success(f"已准备下载词典: {len(st.session_state.custom_dict)} 个条目")
+        else:
+            st.info("当前词典为空，将下载空词典文件")
 
 # Add new dictionary entry
 st.markdown("添加新词条")
