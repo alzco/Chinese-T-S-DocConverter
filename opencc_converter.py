@@ -41,24 +41,32 @@ class CustomOpenCC:
         """
         # 对于繁体到简体的转换，需要特殊处理自定义词典
         if self.config.startswith('t2') or self.config in ['tw2s', 'hk2s']:
-            # 先将原文本进行标准转换
-            converted_text = self.converter.convert(text)
+            # 检查输入文本中是否直接包含自定义词典中的键
+            # 如果有，先应用自定义词典，然后再应用标准转换
+            has_direct_match = False
+            for k in self.custom_dict.keys():
+                if k in text:
+                    has_direct_match = True
+                    break
             
-            # 对于繁体到简体，需要将自定义词典的键也转换为简体
-            # 这样才能正确匹配已转换的文本
-            standard_converter = OpenCC(self.config)
-            for k, v in self.custom_dict.items():
-                # 将自定义词典的键转换为简体，以便匹配
-                simplified_key = standard_converter.convert(k)
-                # 在转换后的文本中替换自定义词典项
-                converted_text = converted_text.replace(simplified_key, v)
+            if has_direct_match:
+                # 如果输入文本中直接包含自定义词典中的键
+                # 先应用自定义词典
+                for k, v in self.custom_dict.items():
+                    if k in text:
+                        text = text.replace(k, v)
                 
-            return converted_text
+                # 然后应用标准转换
+                return self.converter.convert(text)
+            else:
+                # 如果输入文本中不直接包含自定义词典中的键
+                # 直接应用标准转换
+                return self.converter.convert(text)
         else:
             # 简体到繁体：先应用自定义词典，再标准转换
             for k, v in self.custom_dict.items():
                 text = text.replace(k, v)
-                
+            
             # 然后应用标准OpenCC转换
             return self.converter.convert(text)
     
