@@ -405,10 +405,9 @@ with col1:
                 
                 # 更新session state中的转换结果
                 st.session_state.converted_text = converted_text
-                # 将输入文本保存到session state
-                st.session_state.input_text = input_text
-                # 使用rerun来刷新页面，显示新的转换结果
-                st.rerun()
+                
+                # 直接显示结果，不使用rerun
+                # 注意：移除了对st.session_state.input_text的直接赋值，因为这会与文本区域widget冲突
             else:
                 st.warning("请输入要转换的文本")
                 
@@ -446,26 +445,71 @@ with col2:
         st.markdown("点击右侧按钮复制转换结果，或直接选中文本后使用Ctrl+C/Cmd+C复制")
     
     with copy_col2:
-        # 使用Streamlit的按钮组件
+        # 使用JavaScript实现复制功能，更适合Streamlit Cloud
         if st.button("复制", key="copy_btn", use_container_width=True):
-            # 将文本保存到剪贴板
-            try:
-                # 尝试使用pyperclip
-                import pyperclip
-                pyperclip.copy(edited_output)
-                st.success("已复制到剪贴板")
-            except ImportError:
-                # 如果没有pyperclip，提示用户手动复制
-                st.info("请手动选中文本并使用Ctrl+C/Cmd+C复制")
-                # 尝试安装pyperclip
-                st.markdown("正在尝试安装pyperclip...")
-                import subprocess
-                try:
-                    subprocess.check_call(["pip", "install", "pyperclip"])
-                    st.success("安装成功，请刷新页面后再次尝试")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"安装失败: {e}")
+            # 使用JavaScript将文本复制到剪贴板
+            js = f"""
+            <script>
+            const textToCopy = {json.dumps(edited_output)};
+            
+            // 尝试使用现代的Clipboard API
+            async function copyToClipboard() {{
+                try {{
+                    await navigator.clipboard.writeText(textToCopy);
+                    return true;
+                }} catch (err) {{
+                    return false;
+                }}
+            }}
+            
+            // 如果Clipboard API失败，使用后备方法
+            function fallbackCopyToClipboard() {{
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                let success = false;
+                try {{
+                    success = document.execCommand('copy');
+                }} catch (err) {{}}
+                
+                document.body.removeChild(textArea);
+                return success;
+            }}
+            
+            // 尝试复制并显示结果
+            (async () => {{
+                const success = await copyToClipboard() || fallbackCopyToClipboard();
+                const message = document.createElement('div');
+                message.style.position = 'fixed';
+                message.style.top = '10px';
+                message.style.left = '50%';
+                message.style.transform = 'translateX(-50%)';
+                message.style.padding = '10px 20px';
+                message.style.borderRadius = '4px';
+                message.style.zIndex = '9999';
+                
+                if (success) {{
+                    message.style.backgroundColor = '#4CAF50';
+                    message.style.color = 'white';
+                    message.textContent = '已复制到剪贴板';
+                }} else {{
+                    message.style.backgroundColor = '#FFC107';
+                    message.style.color = 'black';
+                    message.textContent = '复制失败，请手动选中文本并使用Ctrl+C/Cmd+C';
+                }}
+                
+                document.body.appendChild(message);
+                setTimeout(() => document.body.removeChild(message), 3000);
+            }})();
+            </script>
+            """
+            st.components.v1.html(js, height=0)
 
 # 文档转换区域
 st.markdown("<div class='simple-divider'></div>", unsafe_allow_html=True)
