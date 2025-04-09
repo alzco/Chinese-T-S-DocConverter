@@ -39,12 +39,28 @@ class CustomOpenCC:
         Returns:
             str: The converted text
         """
-        # First apply the custom dictionary
-        for k, v in self.custom_dict.items():
-            text = text.replace(k, v)
+        # 对于繁体到简体的转换，需要特殊处理自定义词典
+        if self.config.startswith('t2') or self.config in ['tw2s', 'hk2s']:
+            # 先将原文本进行标准转换
+            converted_text = self.converter.convert(text)
             
-        # Then apply the standard OpenCC conversion
-        return self.converter.convert(text)
+            # 对于繁体到简体，需要将自定义词典的键也转换为简体
+            # 这样才能正确匹配已转换的文本
+            standard_converter = OpenCC(self.config)
+            for k, v in self.custom_dict.items():
+                # 将自定义词典的键转换为简体，以便匹配
+                simplified_key = standard_converter.convert(k)
+                # 在转换后的文本中替换自定义词典项
+                converted_text = converted_text.replace(simplified_key, v)
+                
+            return converted_text
+        else:
+            # 简体到繁体：先应用自定义词典，再标准转换
+            for k, v in self.custom_dict.items():
+                text = text.replace(k, v)
+                
+            # 然后应用标准OpenCC转换
+            return self.converter.convert(text)
     
     def add_custom_mapping(self, source, target):
         """
