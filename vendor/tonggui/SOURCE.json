@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/TerryTian-tech/OpenCC-Traditional-Chinese-characters-according-to-Chinese-government-standards",
+  "commit": "bb61139b5f783e7767a4fc4865591b805b942dc3",
+  "license": "Apache-2.0",
+  "files": {
+    "CJK_Compatibility_Ideographs.txt": "663cc10b7de7c7cee3ff9df1ee963977d6c26c00b23f8fe670fab481283ed4f9",
+    "GovVariants.txt": "56641f440e94e182f3b957c2dd93e4f8d6aa43c1930eac530aa2dc7e7cdab3c6",
+    "GovVariants_keep_simp.txt": "a51620142a996697d9b60fb5244665b503309f3daa5800c60a5f30ad598a579c",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "STCharacters.txt": "a07c5ec95bceea7588c8d7a30d2405e0daced6fc2c28f7dd45dc8d086e3786e0",
+    "STPhrases.txt": "9df6bc413559214ead0e0fbc95996557759285409242f9666e7bc75abdec8abc",
+    "TGCharacters.txt": "a2fb809865251c78fd8b1d3ec4d7385cbbc61468d9c19e792b71f5c29fc1478a",
+    "TGCharacters_keep_simp.txt": "2777f3368e940788f43aa5236d45a9314ae5ddfb44dcb77fa643efc27cc4540e",
+    "TGPhrases.txt": "902cf9f59de13c41d18934659c1a83dcba3e86ae818fa7dc792f95111a71d87c",
+    "TSCharacters.txt": "44ef99e9950db31dcf0df7fc819c35eeb7566f839d2c7bd1b1fcd031d666d463",
+    "TSPhrases.txt": "26f2dd9d79cd639ef6fcad1a76caa4a994978ec61e963e0b44b5d9e768571c42",
+    "s2t.json": "7d8fb78b5ab7d9aa9d57dc95736767664612038c58d52f040c6574798d59c376",
+    "t2gov.json": "9089ddf7afc4977b604e41f4f3765ce5f86f1aa046218cfa87ce52333318e7d2",
+    "t2gov_keep_simp.json": "bc6967b5e38bbe5c39caa440e2e39d7fbc714dc7c301d1516718fa1fbec2e605",
+    "t2new.json": "59cd588366f16987d0919d0ec8549cfb6e93d79bd620a27af8dde6bc8e4c9859",
+    "t2new_keep_simp.json": "6ad435b42ecf13e378795e65249f6ad4669f5323cb310c46a56508533b68de1a",
+    "t2s.json": "fcd5e1f132a3bfe968f2076698bfe6257cae2cd414bc8fce52de39e710711343",
+    "《通用规范汉字表》表外正字的转换.md": "51752b43971bd9634d72a74197c92bba9f738470a69960efaba14c479211f32c",
+    "《通用规范汉字表》规范繁体转换方案设计说明.md": "547147cec9bb4ed6ac504f398129cf2c7a780bde5c3d5de7a9576f7d1933d1b5",
+    "「规范繁体字形转换器」更新历史日志.md": "a08b3c8895aa4b757d9f6ae2ba2e546ed4ef75c637d8f5f5d0e9a7d43d59fba1"
+  }
+}

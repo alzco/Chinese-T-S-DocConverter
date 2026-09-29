@@ -1,114 +1,47 @@
-# OpenCC 繁简转换工具
+# 规范繁体转换
 
-基于 [OpenCC](https://github.com/BYVoid/OpenCC) 的中文简繁转换工具，支持自定义词典功能。
+基于 Streamlit 和 OpenCC 的中文文本、TXT、Markdown、Word 简繁转换工具。默认使用 TerryTian-tech 的“简体→规范繁体”方案，支持繁体字形规范化及 OpenCC 的其他转换方向。
 
-## 功能特点
+## 词库来源
 
-- 支持多种转换方向（简体、繁体、台湾繁体、香港繁体、日文新字体）
-- 支持自定义词典，可以添加、保存和加载自定义转换规则
-- 简洁直观的用户界面
-- 基于 Streamlit 开发，易于部署和使用
+- [TerryTian-tech / OpenCC 规范繁体](https://github.com/TerryTian-tech/OpenCC-Traditional-Chinese-characters-according-to-Chinese-government-standards)
+- 固定版本：`bb61139b5f783e7767a4fc4865591b805b942dc3`，Apache-2.0。
+- 原始配置、词库、授权及设计说明保存在 `vendor/tonggui/`，文件校验值见 `SOURCE.json`。上游文件保持原样，界面与文档转换由本项目提供。
+- `s2gov` 直接加载上游 `s2t.json`，`t2gov` 加载上游 `t2gov.json`；使用官方 `OpenCC==1.3.2`，包括相容汉字正规化与词组优先匹配。
 
-## 在线使用
+“规范繁体”按该社区项目的方案转换；上游对部分字形作了调整，不等同于官方字表的逐项复刻。出版前仍需校对。旧版按投稿 Word 文档整理的 73 条规则及用语替换已移除。
 
-https://chinese-t-s-docconverter.streamlit.app/
+## 使用
 
-上传的文件只是临时保存在内存中，刷新后即会删除，不会被保存到Streamlit Cloud的服务器上。
+选择转换方案，输入文字或上传 `.txt`、`.md`、`.docx` 文件。Word 正文、表格、页眉页脚、脚注、尾注均转换，保留原有文字格式。自定义 JSON 词典在 OpenCC 转换之前执行。
 
-## 本地安装说明
+“字表与词库下载”提供《通用规范汉字表》（2013）官方 PDF 链接、单个 TXT 字表/词库，以及包含全部配套配置和授权的 ZIP。官方 PDF 为外部资源；转换词库随应用打包，转换时无需连接上游仓库。
 
-1. 确保已安装 Python 3.7 或更高版本
-2. 克隆或下载本项目
-3. 创建并激活虚拟环境（推荐）
+## 本地运行
 
-```bash
-# 创建虚拟环境
-python -m venv venv
+推荐 Python 3.12，新建独立环境，不使用旧仓库提交的 `venv`。
 
-# 激活虚拟环境
-# Windows
-venv\Scripts\activate
-# macOS/Linux
-source venv/bin/activate
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-4. 安装依赖
+## Streamlit Community Cloud
 
-```bash
-pip install -r requirements.txt
+1. 将本项目推送至 GitHub。
+2. 在 Streamlit Community Cloud 选择仓库 `alzco/Chinese-T-S-DocConverter`、分支 `main`、入口 `app.py`。
+3. Advanced settings 中选择 Python 3.12，部署。已有应用在关联分支更新后自动重新构建。
+
+Cloud 从 `requirements.txt` 安装官方 OpenCC，无需调用桌面程序、系统包管理器或运行时下载词库。勿同时安装 `opencc-python-reimplemented`，两者使用同一个 Python 模块名。
+
+原在线地址：[chinese-t-s-docconverter.streamlit.app](https://chinese-t-s-docconverter.streamlit.app/)。本 README 不代表此地址已更新；以上线检查为准。
+
+## 测试
+
+```sh
+python -B -m unittest discover -s tests -v
 ```
 
-## 本地使用方法
-
-1. 启动应用
-
-```bash
-streamlit run app.py
-```
-
-2. 在浏览器中访问应用（通常是 http://localhost:8501）
-
-3. 使用界面：
-   - 在左侧输入框中输入要转换的文本
-   - 在侧边栏选择转换方向
-   - 点击"转换"按钮进行转换
-   - 转换结果将显示在右侧输出框中
-
-4. 自定义词典：
-   - 在侧边栏的"自定义词典"部分添加新词条
-   - 可以保存词典到文件或从文件加载词典
-   - 可以删除不需要的词条
-
-## 支持的转换方向
-
-- s2t: 简体 → 繁体
-- t2s: 繁体 → 简体
-- s2tw: 简体 → 台湾繁体
-- tw2s: 台湾繁体 → 简体
-- s2hk: 简体 → 香港繁体
-- hk2s: 香港繁体 → 简体
-- s2twp: 简体 → 台湾繁体（台湾用词）
-- tw2sp: 台湾繁体 → 简体（大陆用词）
-- t2tw: 繁体 → 台湾繁体
-- hk2t: 香港繁体 → 繁体
-- t2hk: 繁体 → 香港繁体
-- t2jp: 繁体 → 日文新字体
-- jp2t: 日文新字体 → 繁体
-- tw2t: 台湾繁体 → 繁体
-
-## 自定义词典格式
-
-自定义词典以 JSON 格式存储，格式如下：
-
-```json
-{
-  "源词汇1": "目标词汇1",
-  "源词汇2": "目标词汇2",
-  ...
-}
-```
-
-例如：
-
-```json
-{
-  "计算机": "電腦",
-  "软件": "軟體"
-}
-```
-
-## 核心文件说明
-
-- `app.py`: Streamlit 应用主文件
-- `opencc_converter.py`: OpenCC 转换核心功能
-- `requirements.txt`: 项目依赖
-- `custom_dict.json`: 默认的自定义词典文件（如果存在）
-
-## 许可证
-
-本项目基于 MIT 许可证开源。
-
-## 致谢
-
-- [OpenCC](https://github.com/BYVoid/OpenCC): 开源中文繁简转换工具
-- [Streamlit](https://streamlit.io/): 用于构建应用的框架
+覆盖上游文件校验、配置加载、相容汉字正规化、语义词组、Word 格式与脚注尾注、下载包完整性及 Streamlit 交互。
