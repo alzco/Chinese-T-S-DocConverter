@@ -46,7 +46,12 @@ class CustomOpenCC:
         # Retain the original app's pre-conversion custom dictionary behavior.
         for source, target in self.custom_dict.items():
             text = text.replace(source, target)
-        return self.converter.convert(text)
+        text = self.converter.convert(text)
+        # Simplified input may contain traditional/variant characters already.
+        # Apply the upstream normalization scheme to those characters as well.
+        if self.config == 's2gov':
+            text = get_engine('t2gov').convert(text)
+        return text
 
     def add_custom_mapping(self, source, target):
         self.custom_dict.update(validate_dictionary({source: target}))

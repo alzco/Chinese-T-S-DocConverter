@@ -32,9 +32,27 @@ class ConversionTests(unittest.TestCase):
             with self.subTest(config=config):
                 reference = OpenCC(str(DATA_DIR / filename))
                 for text in samples:
-                    self.assertEqual(CustomOpenCC(config).convert(text), reference.convert(text))
+                    expected = reference.convert(text)
+                    if config == 's2gov':
+                        expected = OpenCC(str(DATA_DIR / 't2gov.json')).convert(expected)
+                    self.assertEqual(CustomOpenCC(config).convert(text), expected)
         self.assertEqual(CustomOpenCC().convert('\ufa19'), '神')
         self.assertEqual(CustomOpenCC('t2gov').convert('綠色記錄'), '緑色記録')
+
+    def test_mixed_input_normalizes_existing_traditional_in_text_and_word(self):
+        text = '侷限、羣、批註、两、麼、蹤、佔、媼媪、方志誌、墓志誌、悅悦、塗抹'
+        expected = '局限、群、批注、兩、麽、踪、占、媪媪、方志志、墓志志、悦悦、塗抹'
+        self.assertEqual(CustomOpenCC().convert(text), expected)
+        self.assertEqual(DocumentConverter().convert_txt_file(text.encode()), expected)
+        document = Document()
+        paragraph = document.add_paragraph()
+        paragraph.add_run('侷').bold = True
+        paragraph.add_run(text[1:])
+        source = io.BytesIO()
+        document.save(source)
+        result = Document(io.BytesIO(DocumentConverter().convert_docx_file(source.getvalue())))
+        self.assertEqual(result.paragraphs[0].text, expected)
+        self.assertTrue(result.paragraphs[0].runs[0].bold)
 
     def test_standard_opencc_directions(self):
         for config in STANDARD_CONFIGS:
