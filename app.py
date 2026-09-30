@@ -321,6 +321,7 @@ with st.expander('字表与词库下载'):
     left.download_button('下载所选词库', (DATA_DIR / filename).read_bytes(), filename, 'text/plain', key='download_dictionary')
     right.download_button('下载全部词库与配置', dictionary_bundle(), 'tonggui-opencc-dictionaries.zip', 'application/zip', key='download_bundle')
     st.caption(f"词库版本 {SOURCE['commit'][:8]} · Apache-2.0")
-st.caption(f'规范繁体方案与词库：[TerryTian-tech / OpenCC 规范繁体]({UPSTREAM_URL}) · 引擎：[OpenCC](https://github.com/BYVoid/OpenCC)')
-st.caption('方案对部分字形另有调整，转换结果仍需校对。')
-st.caption('GitHub 项目：[alzco/Chinese-T-S-DocConverter](https://github.com/alzco/Chinese-T-S-DocConverter)')
+st.caption('GitHub 项目主地址：[alzco/Chinese-T-S-DocConverter](https://github.com/alzco/Chinese-T-S-DocConverter)')
+st.caption(f'规范繁体方案与词库借鉴该项目：[TerryTian-tech / OpenCC 规范繁体]({UPSTREAM_URL}) · 引擎：[OpenCC](https://github.com/BYVoid/OpenCC)')
+st.caption('方案对部分字形另有调整，转换结果仍需校对。人工校对疑难处推荐翻阅[王宁主编《通用规范汉字字典》](https://book.douban.com/subject/25711838/)。')
+
