@@ -85,7 +85,7 @@ class ConversionTests(unittest.TestCase):
     def test_custom_dictionary_and_plain_files(self):
         converter = DocumentConverter(custom_dict={'计算机': '信息处理设备'})
         for kind in ['txt', 'md']:
-            self.assertEqual(converter.convert_file('计算机为众人服务'.encode(), kind), '信息處理設備爲衆人服務')
+            self.assertEqual(converter.convert_file('计算机为众人服务'.encode(), kind), '信息处理设备爲衆人服務')
         self.assertEqual(converter.convert_txt_file('绿色'.encode('gbk')), '緑色')
 
     def test_docx_all_parts_formatting_and_cross_run_context(self):
@@ -124,7 +124,7 @@ class ConversionTests(unittest.TestCase):
         root = etree.fromstring(f'<w:p xmlns:w="{W[1:-1]}"><w:r><w:t>计</w:t></w:r><w:hyperlink><w:r><w:t>算机</w:t></w:r></w:hyperlink><w:r><w:t>为众人</w:t></w:r></w:p>')
         converter = DocumentConverter(custom_dict={'计算机': '信息处理设备'})
         converter._convert_xml_paragraph(root)
-        self.assertEqual(''.join(root.itertext()), '信息處理設備爲衆人')
+        self.assertEqual(''.join(root.itertext()), '信息处理设备爲衆人')
         self.assertIsNotNone(root.find(W + 'hyperlink'))
 
 

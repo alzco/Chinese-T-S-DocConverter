@@ -101,9 +101,10 @@ def cloud_store():
         settings = st.secrets.get('supabase', {})
     except FileNotFoundError:
         return None
-    if not settings.get('url') or not settings.get('secret_key'):
+    key = settings.get('publishable_key') or settings.get('secret_key')
+    if not settings.get('url') or not key:
         return None
-    return PublicDictionaryStore(settings['url'], settings['secret_key'])
+    return PublicDictionaryStore(settings['url'], key)
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -137,12 +138,21 @@ with st.expander('自定义本地词典'):
             except ValueError as error:
                 st.error(str(error))
     if st.session_state.custom_dict:
-        chosen = st.selectbox('已有词条', list(st.session_state.custom_dict), format_func=lambda k: f'{k} → {st.session_state.custom_dict[k]}')
-        if st.button('删除词条'):
-            del st.session_state.custom_dict[chosen]
-            st.rerun()
+        with st.expander(f'已有词条（{len(st.session_state.custom_dict)}）'):
+            chosen = st.multiselect(
+                '选择要删除的词条', list(st.session_state.custom_dict),
+                format_func=lambda k: f'{k} → {st.session_state.custom_dict[k]}',
+                key='local_delete_terms')
+            st.dataframe(
+                [{'原词': source, '替换为': target}
+                 for source, target in st.session_state.custom_dict.items()],
+                hide_index=True, use_container_width=True)
+            if st.button('删除所选词条', key='delete_local_terms', disabled=not chosen):
+                for source in chosen:
+                    st.session_state.custom_dict.pop(source, None)
+                st.rerun()
     st.download_button('导出自定义词典', json.dumps(st.session_state.custom_dict, ensure_ascii=False, indent=2), 'custom_dict.json', 'application/json')
-    st.caption('自定义替换先于繁简转换执行。')
+    st.caption('替换词作为最终结果保留。优先级：自定义本地词典 ＞ 公共词典 ＞ OpenCC。')
 
 with st.expander('上传到公共词典', expanded=True):
     upload_rows = []

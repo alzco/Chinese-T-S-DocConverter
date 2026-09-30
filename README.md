@@ -5,7 +5,7 @@
 ## 功能
 
 - **文档转换**：默认打开，支持 TXT、Markdown 和 Word（`.docx`）。Word 正文、表格、页眉页脚、脚注和尾注均参与转换，保留原有文字格式。
-- **文本转换**：输入、预览并下载结果，也可加载示例或清空内容。
+- **文本转换**：输入、预览并复制结果，也可加载示例或清空内容。
 - **方向选择**：源语言和目标语言分开选择，支持简体、规范繁体、台湾繁体和香港繁体的可用转换方向；两端不能相同。
 - **自定义本地词典**：新增、删除映射，导入和导出 JSON 词典。
 - **公共词典**：可新建公共词典，也可把词条合并到现有词典；其他用户可按需勾选，仅用于“简体 → 规范繁体”，默认不启用。
@@ -37,7 +37,7 @@
 
 ## 自定义词典
 
-自定义 JSON 词典在 OpenCC 转换**之前**执行，替换后的文字仍会经过所选转换方案。添加词汇之后，会制作成JSON格式，并提供下载。格式例如：
+自定义 JSON 词典命中的替换词会作为最终结果保留，不再被 OpenCC 改写。优先级固定为：**自定义本地词典 ＞ 云端公共词典 ＞ OpenCC**。页面可展开已有词条，多选后批量删除，也可导入或导出 JSON。格式例如：
 
 ```json
 {
@@ -56,19 +56,20 @@
 
 ### 连接已有 Supabase 项目
 
-1. 在 Supabase SQL Editor 执行 [`supabase/schema.sql`](supabase/schema.sql)。脚本创建词典表、校验和限流触发器，并启用 RLS，禁止 `anon`、`authenticated` 直接访问。
-2. 从项目设置取得项目 URL 和 **server secret key**（也兼容旧 `service_role` key）。密钥仅供 Streamlit 服务端使用。
-3. 本地将 [`.streamlit/secrets.example.toml`](.streamlit/secrets.example.toml) 复制为 `.streamlit/secrets.toml` 并填写；线上在 Streamlit 应用 Settings → Secrets 填写同样内容：
+1. 在 Supabase SQL Editor 执行 [`supabase/schema.sql`](supabase/schema.sql)。脚本创建词典表、校验和限流触发器，并启用 RLS：发布密钥可读取启用的词典，但不能直接写表。
+2. 部署 [`supabase/functions/public-dictionaries/index.ts`](supabase/functions/public-dictionaries/index.ts) Edge Function。新建和补充词典都通过该函数完成，数据库 Secret 只存在于 Supabase 函数环境中。
+3. 从项目设置取得项目 URL 和 **Publishable Key**。此密钥只用于读取公共词典和调用投稿函数，可以安全地配置到应用环境中；不要把数据库 Secret 写进仓库。
+4. 本地将 [`.streamlit/secrets.example.toml`](.streamlit/secrets.example.toml) 复制为 `.streamlit/secrets.toml` 并填写；线上在 Streamlit 应用 Settings → Secrets 填写同样内容：
 
 ```toml
 [supabase]
 url = "https://YOUR_PROJECT.supabase.co"
-secret_key = "YOUR_SERVER_SECRET_KEY"
+publishable_key = "YOUR_PUBLISHABLE_KEY"
 ```
 
-4. 重启应用，上传一份非敏感的测试词典并主动公开；在另一个浏览器会话中刷新公共词典列表，选择它并验证转换结果。删除测试数据可在 Supabase Dashboard 中操作。
+5. 重启应用，上传一份非敏感的测试词典并主动公开；在另一个浏览器会话中刷新公共词典列表，选择它并验证转换结果。删除测试数据可在 Supabase Dashboard 中操作。
 
-未配置连接时，公开与使用公共词典的开关不可用，其他功能正常。配置后连接失败会显示重试提示；已开启公共词典时会暂停转换，避免悄悄忽略所选词典。服务端密钥不可放入前端、README 或 Git；本地真实 Secrets 文件已被忽略。
+未配置连接时，公开与使用公共词典的开关不可用，其他功能正常。配置后连接失败会显示重试提示；已开启公共词典时会暂停转换，避免悄悄忽略所选词典。本地真实 Secrets 文件已被忽略。
 
 ### 存储与维护
 
@@ -104,4 +105,3 @@ python -B -m unittest discover -s tests -v
 ```
 
 覆盖上游文件校验、配置加载、相容汉字正规化、混合简繁输入、语义词组、Word 格式与脚注尾注、下载包完整性，以及语言对调、选项联动等 Streamlit 交互。
-

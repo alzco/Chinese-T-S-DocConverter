@@ -1,4 +1,5 @@
--- Run once in the Supabase SQL editor. The app uses a server-only secret key.
+-- Run once in the Supabase SQL editor. Public reads use the publishable key;
+-- writes are handled by the public-dictionaries Edge Function.
 create table if not exists public.public_dictionaries (
   id text primary key check (id ~ '^[a-f0-9]{64}$'),
   name text not null check (char_length(trim(name)) between 1 and 60),
@@ -8,7 +9,12 @@ create table if not exists public.public_dictionaries (
 );
 alter table public.public_dictionaries enable row level security;
 revoke all on public.public_dictionaries from anon, authenticated;
+grant select on public.public_dictionaries to anon, authenticated;
 grant select, insert, update on public.public_dictionaries to service_role;
+drop policy if exists "Public dictionaries are readable" on public.public_dictionaries;
+create policy "Public dictionaries are readable"
+on public.public_dictionaries for select to anon, authenticated
+using (active);
 create index if not exists public_dictionaries_recent on public.public_dictionaries (created_at desc) where active;
 -- To hide a problematic dictionary, set active=false in the dashboard.
 -- Identical contents cannot be uploaded twice, including after being hidden.

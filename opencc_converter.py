@@ -44,22 +44,28 @@ class CustomOpenCC:
         self.public_dict = {}
 
     def convert(self, text):
-        # Retain the original app's pre-conversion custom dictionary behavior.
-        for source, target in self.custom_dict.items():
-            text = text.replace(source, target)
         protected = {}
-        # Public dictionaries contain reviewed final forms, especially names.
-        # Protect matches from subsequent OpenCC character conversion.
-        for index, source in enumerate(sorted(self.public_dict, key=len, reverse=True)):
-            if source not in text:
-                continue
-            marker_index = index
-            marker = f'\ue000{marker_index}\ue001'
-            while marker in text or marker in self.public_dict.values():
-                marker_index += len(self.public_dict) + 1
+        marker_index = 0
+
+        def protect(mapping):
+            nonlocal text, marker_index
+            # Longest matches win inside each dictionary. Calling this for the
+            # local dictionary first also gives it precedence over public terms.
+            for source in sorted(mapping, key=len, reverse=True):
+                if source not in text:
+                    continue
                 marker = f'\ue000{marker_index}\ue001'
-            text = text.replace(source, marker)
-            protected[marker] = self.public_dict[source]
+                while marker in text or marker in mapping.values():
+                    marker_index += 1
+                    marker = f'\ue000{marker_index}\ue001'
+                text = text.replace(source, marker)
+                protected[marker] = mapping[source]
+                marker_index += 1
+
+        # Both dictionary layers specify final forms. Protect them from OpenCC,
+        # in strict local > public > OpenCC order.
+        protect(self.custom_dict)
+        protect(self.public_dict)
         text = self.converter.convert(text)
         # Simplified input may contain traditional/variant characters already.
         # Apply the upstream normalization scheme to those characters as well.

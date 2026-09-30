@@ -27,7 +27,7 @@ class PublicDictionaryTests(unittest.TestCase):
             self.assertEqual(merge_dictionaries(rows, ['new', 'old'], {}, enabled, scheme), ({}, 0))
         mapping, conflicts = merge_dictionaries(rows, ['new', 'old'], {}, True, 's2gov')
         self.assertEqual(conflicts, 1)
-        self.assertEqual(DocumentConverter(custom_dict=mapping).convert_text('电脑'), '信息設備')
+        self.assertEqual(DocumentConverter(public_dict=mapping).convert_text('电脑'), '信息设备')
         mapping, _ = merge_dictionaries(rows, ['new', 'old'], {'电脑': '个人设备'}, True, 's2gov')
         self.assertEqual(mapping['电脑'], '个人设备')
 
@@ -38,35 +38,42 @@ class PublicDictionaryTests(unittest.TestCase):
         document_converter = DocumentConverter(public_dict=converter.public_dict)
         self.assertEqual(document_converter.convert_text('涂丰恩'), '涂豐恩')
 
+    def test_local_dictionary_wins_and_both_layers_are_final(self):
+        converter = CustomOpenCC()
+        converter.custom_dict = {'涂秀虹': '涂秀虹'}
+        converter.public_dict = {'涂秀虹': '塗秀虹', '涂丰恩': '涂豐恩'}
+        self.assertEqual(converter.convert('涂秀虹、涂丰恩、涂料'), '涂秀虹、涂豐恩、塗料')
+
     @patch('public_dictionary.urlopen')
-    def test_rest_publication_deduplicates_and_sends_only_dictionary(self, request):
-        request.side_effect = [io.BytesIO(b'[{"id":"new"}]'), io.BytesIO(b'[]')]
-        store = PublicDictionaryStore('https://example.supabase.co', 'sb_secret_TEST')
+    def test_edge_publication_deduplicates_and_sends_only_dictionary(self, request):
+        request.side_effect = [io.BytesIO(b'{"created":true}'), io.BytesIO(b'{"created":false}')]
+        store = PublicDictionaryStore('https://example.supabase.co', 'sb_publishable_TEST')
         self.assertTrue(store.publish('词典', b'{"b":"B","a":"A"}'))
         first = request.call_args.args[0]
         self.assertFalse(store.publish('词典二', b'{"a":"A","b":"B"}'))
         second = request.call_args.args[0]
         payload = json.loads(first.data)
-        self.assertEqual(set(payload), {'id', 'name', 'mapping'})
+        self.assertEqual(set(payload), {'action', 'id', 'name', 'mapping'})
         self.assertEqual(payload['id'], json.loads(second.data)['id'])
         self.assertNotIn('Authorization', first.headers)
-        self.assertEqual(first.headers['Apikey'], 'sb_secret_TEST')
+        self.assertEqual(first.headers['Apikey'], 'sb_publishable_TEST')
+        self.assertTrue(first.full_url.endswith('/functions/v1/public-dictionaries'))
 
     @patch('public_dictionary.urlopen')
     def test_merge_into_existing_dictionary(self, request):
-        request.return_value = io.BytesIO(b'[{"id":"existing"}]')
-        store = PublicDictionaryStore('https://example.supabase.co', 'sb_secret_TEST')
+        request.return_value = io.BytesIO(b'{"updated":true}')
+        store = PublicDictionaryStore('https://example.supabase.co', 'sb_publishable_TEST')
         result = store.merge_into('existing', '{"新词":"新词目标"}'.encode())
         sent = request.call_args.args[0]
-        self.assertEqual(result[0]['id'], 'existing')
-        self.assertTrue(sent.full_url.endswith('/rest/v1/rpc/merge_public_dictionary'))
+        self.assertTrue(result['updated'])
+        self.assertTrue(sent.full_url.endswith('/functions/v1/public-dictionaries'))
         self.assertEqual(json.loads(sent.data), {
-            'target_id': 'existing', 'additions': {'新词': '新词目标'}})
+            'action': 'merge', 'target_id': 'existing', 'mapping': {'新词': '新词目标'}})
 
     @patch('public_dictionary.urlopen', side_effect=URLError('SECRET must not leak'))
     def test_cloud_errors_are_safe(self, request):
         with self.assertRaises(PublicDictionaryError) as error:
-            PublicDictionaryStore('https://example.supabase.co', 'sb_secret_TEST').list()
+            PublicDictionaryStore('https://example.supabase.co', 'sb_publishable_TEST').list()
         self.assertNotIn('SECRET', str(error.exception))
 
     def test_ui_without_cloud_defaults_off(self):
@@ -81,7 +88,7 @@ class PublicDictionaryTests(unittest.TestCase):
     @patch('public_dictionary.PublicDictionaryStore.list', side_effect=PublicDictionaryError('连接失败'))
     def test_cloud_failure_blocks_conversion_until_disabled(self, listing):
         app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'app.py'))
-        app.secrets['supabase'] = {'url': 'https://failure.supabase.co', 'secret_key': 'sb_secret_TEST'}
+        app.secrets['supabase'] = {'url': 'https://failure.supabase.co', 'publishable_key': 'sb_publishable_TEST'}
         app.run()
         app.checkbox(key='use_public_dictionary').check().run()
         self.assertTrue(app.button(key='convert_text_btn').disabled)
@@ -94,7 +101,7 @@ class PublicDictionaryTests(unittest.TestCase):
     def test_cloud_picker_applies_only_after_opt_in(self, listing):
         listing.return_value = [dict(id='test', name='专有名词与词组（简体转规范繁体）', created_at='2026-09-30', mapping={'电脑': '信息设备'})]
         app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'app.py'))
-        app.secrets['supabase'] = {'url': 'https://test.supabase.co', 'secret_key': 'sb_secret_TEST'}
+        app.secrets['supabase'] = {'url': 'https://test.supabase.co', 'publishable_key': 'sb_publishable_TEST'}
         app.run()
         # The upload area loads existing dictionaries so users can append to one.
         self.assertEqual(listing.call_count, 1)
@@ -110,4 +117,16 @@ class PublicDictionaryTests(unittest.TestCase):
         app.checkbox(key='use_public_dictionary').uncheck().run()
         app.button(key='convert_text_btn').click().run()
         self.assertEqual(app.text_area(key='output_text').value, '電腦')
+        self.assertEqual(len(app.exception), 0)
+
+    def test_local_dictionary_delete_picker_supports_multiple_entries(self):
+        app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'app.py'))
+        app.secrets['supabase'] = {}
+        app.session_state['custom_dict'] = {'甲': 'A', '乙': 'B'}
+        app.run(timeout=10)
+        picker = app.multiselect(key='local_delete_terms')
+        picker.set_value(['甲', '乙']).run(timeout=10)
+        self.assertFalse(app.button(key='delete_local_terms').disabled)
+        app.button(key='delete_local_terms').click().run(timeout=10)
+        self.assertEqual(dict(app.session_state['custom_dict']), {})
         self.assertEqual(len(app.exception), 0)
