@@ -118,7 +118,7 @@ except PublicDictionaryError:
     store = None
 
 with st.expander('自定义本地词典'):
-    st.caption('JSON 格式须为“原词: 替换词”的对象，例如：`{"计算机": "計算機", "会议": "會議"}`。文件使用 UTF-8 编码，最多 500 个词条、128 KB。网页刷新后，自定义词典缓存将删除。有需要的话请及时下载，以便下次使用。优质词典建议上传到云端公共词典，以便下次直接选用。')
+    st.caption('JSON 格式须为“原词: 替换词”的对象，例如：`{"计算机": "計算機", "会议": "會議"}`。文件使用 UTF-8 编码，最多 500 个词条、128 KB。网页刷新后，自定义词典缓存将删除，有需要的话请及时下载。优质词典建议上传到云端公共词典，以便下次直接选用。')
     uploaded_dictionary = st.file_uploader('导入 JSON 词典', type=['json'], key='dictionary_upload')
     if uploaded_dictionary is not None:
         fingerprint = hashlib.sha256(uploaded_dictionary.getvalue()).hexdigest()
