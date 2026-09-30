@@ -11,7 +11,7 @@
 - **公共词典**：可新建公共词典，也可把词条合并到现有词典；其他用户可按需勾选，仅用于“简体 → 规范繁体”，默认不启用。
 - **字表与词库下载**：提供官方字表 PDF 链接、单个词库及完整词库 ZIP。
 
-## 在线使用
+## 推荐直接在线使用
 
 托管在Streamlit平台，在线地址：[chinese-t-s-docconverter.streamlit.app](https://chinese-t-s-docconverter.streamlit.app/)。
 
