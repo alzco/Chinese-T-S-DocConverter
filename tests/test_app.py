@@ -29,7 +29,7 @@ class AppTests(unittest.TestCase):
         app.button(key='convert_text_btn').click().run()
         self.assertEqual(app.text_area(key='output_text').value, '緑色記録')
         app.selectbox(key='resource').set_value('繁体→规范繁体 · 词库').run()
-        self.assertEqual(len(app.get('download_button')), 4)
+        self.assertEqual(len(app.get('download_button')), 3)
         app.button(key='clear_text_btn').click().run()
         self.assertEqual(app.text_area(key='input_text').value, '')
         self.assertEqual(app.text_area(key='output_text').value, '')

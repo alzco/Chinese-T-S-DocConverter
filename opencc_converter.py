@@ -41,16 +41,32 @@ class CustomOpenCC:
         self.config = config
         self.converter = get_engine(config)
         self.custom_dict = {}
+        self.public_dict = {}
 
     def convert(self, text):
         # Retain the original app's pre-conversion custom dictionary behavior.
         for source, target in self.custom_dict.items():
             text = text.replace(source, target)
+        protected = {}
+        # Public dictionaries contain reviewed final forms, especially names.
+        # Protect matches from subsequent OpenCC character conversion.
+        for index, source in enumerate(sorted(self.public_dict, key=len, reverse=True)):
+            if source not in text:
+                continue
+            marker_index = index
+            marker = f'\ue000{marker_index}\ue001'
+            while marker in text or marker in self.public_dict.values():
+                marker_index += len(self.public_dict) + 1
+                marker = f'\ue000{marker_index}\ue001'
+            text = text.replace(source, marker)
+            protected[marker] = self.public_dict[source]
         text = self.converter.convert(text)
         # Simplified input may contain traditional/variant characters already.
         # Apply the upstream normalization scheme to those characters as well.
         if self.config == 's2gov':
             text = get_engine('t2gov').convert(text)
+        for marker, target in protected.items():
+            text = text.replace(marker, target)
         return text
 
     def add_custom_mapping(self, source, target):

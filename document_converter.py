@@ -24,7 +24,7 @@ class DocumentConverter:
     Supports txt, md, and docx files.
     """
     
-    def __init__(self, opencc_config='s2gov', custom_dict=None):
+    def __init__(self, opencc_config='s2gov', custom_dict=None, public_dict=None):
         """
         Initialize the document converter.
         
@@ -33,6 +33,7 @@ class DocumentConverter:
             custom_dict (dict): Optional custom dictionary for conversion
         """
         self.converter = CustomOpenCC(opencc_config)
+        self.converter.public_dict = dict(public_dict or {})
         
         # Add custom dictionary entries if provided
         if custom_dict:

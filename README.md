@@ -7,7 +7,8 @@
 - **文档转换**：默认打开，支持 TXT、Markdown 和 Word（`.docx`）。Word 正文、表格、页眉页脚、脚注和尾注均参与转换，保留原有文字格式。
 - **文本转换**：输入、预览并下载结果，也可加载示例或清空内容。
 - **方向选择**：源语言和目标语言分开选择，支持简体、规范繁体、台湾繁体和香港繁体的可用转换方向；两端不能相同。
-- **自定义词典**：新增、删除映射，导入和导出 JSON 词典。
+- **自定义本地词典**：新增、删除映射，导入和导出 JSON 词典。
+- **公共词典**：可新建公共词典，也可把词条合并到现有词典；其他用户可按需勾选，仅用于“简体 → 规范繁体”，默认不启用。
 - **字表与词库下载**：提供官方字表 PDF 链接、单个词库及完整词库 ZIP。
 
 ## 词库来源
@@ -37,6 +38,38 @@
 
 “字表与词库下载”提供《通用规范汉字表》（2013）官方 PDF 链接、单个 TXT 字表/词库，以及包含全部配套配置和授权的 ZIP。官方 PDF 为外部资源；转换词库随应用打包，转换时无需连接上游仓库。
 
+## 公共词典（Supabase）
+
+个人词典默认只保留在当前会话。页面提供独立且默认展开的“上传到公共词典”入口：选择 JSON 文件，填写名称、查看词条，勾选同意公开，再点击始终可见的“上传并公开词典”按钮才会写入云端。按钮在文件、名称、同意选项或云端连接尚未就绪时显示为不可用。公开内容仅包括词典名称和词条，不包括转换文本、Word 文档或原文件名。词条为用户提供，不代表官方字表。
+
+使用时展开“使用公共词典”，开启使用开关并选择具体词典。“专有名词与词组（简体转规范繁体）”会作为默认选择。个人词典优先于公共词典；公共词典相同原词有冲突时，以较新发布的版本为准。公共词典命中的专有名词会在转换过程中受到保护，最终严格采用词典给出的目标字形，例如姓氏“涂”不会再次被 OpenCC 转为“塗”。关闭公共词典或切换到其他转换方向后，公共词条不参与转换。
+
+上传时可选择“新建公共词典”或“补充现有公共词典”。补充现有词典会合并词条；若原词已经存在，以本次上传的替换词覆盖。JSON 须为 UTF-8 编码的对象，例如 `{"计算机": "信息处理设备"}`。
+
+### 连接已有 Supabase 项目
+
+1. 在 Supabase SQL Editor 执行 [`supabase/schema.sql`](supabase/schema.sql)。脚本创建词典表、校验和限流触发器，并启用 RLS，禁止 `anon`、`authenticated` 直接访问。
+2. 从项目设置取得项目 URL 和 **server secret key**（也兼容旧 `service_role` key）。密钥仅供 Streamlit 服务端使用。
+3. 本地将 [`.streamlit/secrets.example.toml`](.streamlit/secrets.example.toml) 复制为 `.streamlit/secrets.toml` 并填写；线上在 Streamlit 应用 Settings → Secrets 填写同样内容：
+
+```toml
+[supabase]
+url = "https://YOUR_PROJECT.supabase.co"
+secret_key = "YOUR_SERVER_SECRET_KEY"
+```
+
+4. 重启应用，上传一份非敏感的测试词典并主动公开；在另一个浏览器会话中刷新公共词典列表，选择它并验证转换结果。删除测试数据可在 Supabase Dashboard 中操作。
+
+未配置连接时，公开与使用公共词典的开关不可用，其他功能正常。配置后连接失败会显示重试提示；已开启公共词典时会暂停转换，避免悄悄忽略所选词典。服务端密钥不可放入前端、README 或 Git；本地真实 Secrets 文件已被忽略。
+
+### 存储与维护
+
+- 每份 JSON 最多 128 KB、500 个词条；原词最多 64 字，替换词最多 256 字，不能为空。
+- 相同词条内容按摘要去重，不因改名重复发布。列表展示最新 100 份启用的词典，缓存 60 秒，也可手动刷新。
+- 当前为无需账号的主动公开模式：每个会话每分钟最多提交一次，数据库全局每分钟最多接收 10 份。基础限流不能代替账号管理；大量开放投稿时应增加登录和审核。
+- 维护者可在 Supabase Dashboard 将词典的 `active` 设为 `false` 以隐藏。隐藏的相同内容不会被重复上传重新启用。
+- 上传的词典独立保存在 Supabase，不依赖 Streamlit 临时磁盘。数据库密钥轮换、项目配额及维护由项目所有者管理。
+
 ## 本地运行
 
 推荐 Python 3.12，新建独立环境，不使用旧仓库提交的 `venv`。
@@ -56,6 +89,8 @@ python -m streamlit run app.py
 
 Cloud 从 `requirements.txt` 安装官方 OpenCC，无需调用桌面程序、系统包管理器或运行时下载词库。勿同时安装 `opencc-python-reimplemented`，两者使用同一个 Python 模块名。
 
+**唤醒提示：在线地址长期未使用需要等待唤醒 app。** Streamlit Community Cloud 无访问 12 小时后会休眠，再次打开时按页面提示唤醒并等待启动；详见[官方休眠说明](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app)。
+
 原在线地址：[chinese-t-s-docconverter.streamlit.app](https://chinese-t-s-docconverter.streamlit.app/)。本 README 不代表此地址已更新；以上线检查为准。
 
 ## 测试
@@ -65,3 +100,9 @@ python -B -m unittest discover -s tests -v
 ```
 
 覆盖上游文件校验、配置加载、相容汉字正规化、混合简繁输入、语义词组、Word 格式与脚注尾注、下载包完整性，以及语言对调、选项联动等 Streamlit 交互。
+
+## 部署建议
+
+当前版本推荐 **Streamlit Community Cloud + Supabase**：继续使用现有 Python/OpenCC/Word 转换，公共词典由外部数据库持久保存。界面采用白底、系统字体与单一蓝色操作色。
+
+若后续需要精细的移动端交互、账号与词典管理，可迁移为独立前端 + Python API + Supabase；仅更换托管平台不会改变 Streamlit 的组件和布局能力。若主要诉求是避免等待唤醒，可考虑常驻付费 Python 服务。Render 免费服务也会闲置休眠（[官方说明](https://render.com/docs/free)），不是消除冷启动的替代方案。
