@@ -154,7 +154,7 @@ with st.expander('自定义本地词典'):
     st.download_button('导出自定义词典', json.dumps(st.session_state.custom_dict, ensure_ascii=False, indent=2), 'custom_dict.json', 'application/json')
     st.caption('替换词作为最终结果保留。优先级：自定义本地词典 ＞ 公共词典 ＞ OpenCC。')
 
-with st.expander('上传到公共词典', expanded=True):
+with st.expander('上传到公共词典', expanded=False):
     upload_rows = []
     if store is not None:
         try:
@@ -211,7 +211,7 @@ with st.expander('上传到公共词典', expanded=True):
                 st.error(str(error))
 
 cloud_failed = False
-with st.expander('使用公共词典'):
+with st.expander('使用公共词典', expanded=True):
     public_enabled = st.checkbox('使用云端用户公共词典', key='use_public_dictionary',
                                  disabled=store is None or selected != 's2gov')
     public_rows = []
