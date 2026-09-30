@@ -46,7 +46,7 @@ a { color: #1a73e8; }
 """, unsafe_allow_html=True)
 
 st.title('规范汉字繁简转换工具')
-st.caption('基于openCC与《通用规范汉字表》的中文简繁转换工具，支持自定义词典功能、云端公共词典功能。依托Streamlit平台处理，云端不储存文件，待处理文档与自定义词典刷新后即消失，请及时下载。云端有《【简体→规范繁体】补充词汇》，在简体转规范繁场景下建议勾选使用，欢迎共同维护。')
+st.caption('基于openCC与中国大陆《通用规范汉字表》的中文简繁转换工具，支持自定义词典功能、云端公共词典功能。依托Streamlit平台处理，云端不储存文件，待处理文档与自定义词典刷新后即消失，请及时下载。云端预设了《【简体→规范繁体】补充词汇》，在简体转规范繁场景下建议勾选使用，欢迎共同维护。')
 
 # Only expose useful, directly supported directions. Internal OpenCC configuration
 # names and specialized normalization modes are kept out of the main interface.
@@ -84,7 +84,7 @@ with st.container(border=False, key='conversion_settings'):
     st.session_state.scheme = selected
 
     if target_language == '规范繁体':
-        purpose = ('将简体转为规范繁体，同时统一原文中已有的繁体和异体字形' if source_language == '简体'
+        purpose = ('将简体转为大陆规范繁体，同时统一原文中已有的繁体和异体字形' if source_language == '简体'
                    else '将原文中的繁体字形统一为规范繁体')
         explanation = f'{purpose}，采用依据《通用规范汉字表》整理的转换方案。'
     elif target_language == '简体':
