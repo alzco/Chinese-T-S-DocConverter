@@ -118,7 +118,7 @@ except PublicDictionaryError:
     store = None
 
 with st.expander('自定义本地词典'):
-    st.caption('JSON 格式须为“原词: 替换词”的对象，例如：`{"计算机": "計算機", "会议": "會議"}`。文件使用 UTF-8 编码，最多 500 个词条、128 KB。网页刷新后，自定义词典缓存将删除。有需要的话请及时下载，以便下次使用。')
+    st.caption('JSON 格式须为“原词: 替换词”的对象，例如：`{"计算机": "計算機", "会议": "會議"}`。文件使用 UTF-8 编码，最多 500 个词条、128 KB。网页刷新后，自定义词典缓存将删除。有需要的话请及时下载，以便下次使用。优质词典建议上传到云端公共词典，以便下次直接选用。')
     uploaded_dictionary = st.file_uploader('导入 JSON 词典', type=['json'], key='dictionary_upload')
     if uploaded_dictionary is not None:
         fingerprint = hashlib.sha256(uploaded_dictionary.getvalue()).hexdigest()
@@ -187,7 +187,7 @@ with st.expander('上传到公共词典', expanded=True):
     if store is None:
         st.caption('云端尚未连接，完成配置后即可上传。')
     if upload_mode == '补充现有公共词典':
-        st.caption('上传内容将合并到所选词典；遇到相同原词时，以本次上传的替换词为准。两次词典提交时间需间隔1分钟，。')
+        st.caption('上传内容将合并到所选词典；遇到相同原词时，以本次上传的替换词为准。为防止攻击，两次词典提交时间需间隔1分钟。')
     st.caption('仅公开词典名称与词条，用于简体转规范繁体；不会公开你的文本和 Word 文档。公共词典由@alzco维护，上传之后如需修改、删除词典，请联系本人或到[GitHub项目主页Issues区](https://github.com/alzco/Chinese-T-S-DocConverter/issues)留言。')
     ready_target = bool(public_name.strip()) if upload_mode == '新建公共词典' else bool(target_dictionary_id)
     publish_label = '新建并公开词典' if upload_mode == '新建公共词典' else '合并到现有词典'
