@@ -46,7 +46,7 @@ a { color: #1a73e8; }
 """, unsafe_allow_html=True)
 
 st.title('规范汉字繁简转换工具')
-st.caption('基于openCC与《通用规范汉字表》的中文简繁转换工具，支持自定义词典功能、云端公共词典功能。依托Streamlit平台处理，云端不储存文件，待处理文档与自定义词典刷新后即消失，请及时下载。')
+st.caption('基于openCC与《通用规范汉字表》的中文简繁转换工具，支持自定义词典功能、云端公共词典功能。依托Streamlit平台处理，云端不储存文件，待处理文档与自定义词典刷新后即消失，请及时下载。云端有《【简体→规范繁体】补充词汇》，在简体转规范繁场景下建议勾选使用，欢迎共同维护。')
 
 # Only expose useful, directly supported directions. Internal OpenCC configuration
 # names and specialized normalization modes are kept out of the main interface.
